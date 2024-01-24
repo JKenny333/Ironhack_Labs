@@ -8,7 +8,7 @@ USE sakila;
 	#1.2. Express the average movie duration in hours and minutes. Don't use decimals.
     SELECT 
     FLOOR(AVG(length) / 60) AS average_hours, 
-    AVG(length) % 60 AS average_minutes
+    ROUND(AVG(length)) % 60 AS average_minutes
 	FROM film;
     
 #2. You need to gain insights related to rental dates:
