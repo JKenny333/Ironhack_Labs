@@ -36,15 +36,6 @@ WHERE film_id IN (SELECT film_id
                     WHERE category_id IN (SELECT category_id
 											FROM category
 											WHERE name = "Family"));
-#with join                                          
-SELECT film.title, category.name
-FROM film 
-INNER JOIN film_category
-USING(film_id)
-INNER JOIN category
-USING(category_id)
-WHERE category.name = "Family";
-
 
     
 # 5. Retrieve the name and email of customers from Canada using both subqueries and joins. 
@@ -78,12 +69,19 @@ WHERE co.country = "Canada";
 	# A prolific actor is defined as the actor who has acted in the most number of films.
     # First, you will need to find the most prolific actor and then use that actor_id to find the 
     # different films that he or she starred in.
-    
-SELECT title
-FROM film
-WHERE actor_id = (SELECT actor_id
+SELECT * FROM film_actor;
+  
+SELECT actor_id, COUNT(film_id)
 					FROM film_actor
-                    WHERE IN 
+                    GROUP BY actor_id;
+
+
+  
+SELECT title
+FROM actor
+WHERE actor_id = (SELECT actor_id, COUNT(film_id)
+						FROM film_actor
+						GROUP BY actor_id);
                     
 SELECT 
 FROM film_actor 
@@ -98,7 +96,49 @@ WHERE co.country = "Canada";
 # 7. Find the films rented by the most profitable customer in the Sakila database. 
 	# You can use the customer and payment tables to find the most profitable customer, 
     # i.e., the customer who has made the largest sum of payments.
-    
+  #using joins  
+    SELECT title
+    FROM film
+    INNER JOIN inventory
+    USING(film_id)
+    INNER JOIN rental
+    USING(inventory_id)
+    INNER JOIN payment
+    USING(customer_id)
+    WHERE customer_id = (SELECT customer_id
+						FROM payment
+						GROUP BY customer_id
+						ORDER BY sum(amount) DESC
+						LIMIT 1)
+  GROUP BY title; 
+
+#with subqueries
+SELECT title
+FROM film
+WHERE film_id IN (SELECT film_id
+						FROM inventory
+                        WHERE inventory_id IN (SELECT inventory_id
+											FROM rental
+                                            WHERE customer_id = (SELECT customer_id
+																	FROM payment
+																	GROUP BY customer_id
+																	ORDER BY sum(amount) DESC
+																	LIMIT 1)));
+
     
 # 8. Retrieve the client_id and the total_amount_spent of those clients who spent more than the average
 	# of the total_amount spent by each client. You can use subqueries to accomplish this.
+    
+#overview
+SELECT * FROM payment;
+
+#total amount spent by each client
+SELECT customer_id, SUM(amount) AS total_spent_p_C
+FROM payment   
+GROUP BY customer_id
+HAVING total_spent_p_c > (SELECT AVG(total_spent)
+							FROM (SELECT SUM(amount) AS total_spent
+								FROM payment   
+								GROUP BY customer_id) AS t);    
+
+
